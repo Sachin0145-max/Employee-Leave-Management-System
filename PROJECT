@@ -1,0 +1,187 @@
+from datetime import datetime
+
+# Employee Data Dictionary with multiple employees and leave balances
+employees = {
+    "E101": {
+        "name": "Sachin Kumar",
+        "balances": {"Casual Leave": 12, "Sick Leave": 10, "Earned Leave": 15}
+    },
+    "E102": {
+        "name": "Rakesh Raushan",
+        "balances": {"Casual Leave": 10, "Sick Leave": 8, "Earned Leave": 12}
+    },
+    "E103": {
+        "name": "Ajay Mehta",
+        "balances": {"Casual Leave": 14, "Sick Leave": 10, "Earned Leave": 15}
+    },
+    "E104": {
+        "name": "Vijay Kumar",
+        "balances": {"Casual Leave": 12, "Sick Leave": 12, "Earned Leave": 10}
+    },
+    "E105": {
+        "name": "abhiraj singh",
+        "balances": {"Casual Leave": 15, "Sick Leave": 10, "Earned Leave": 14}
+    },
+    "E106": {
+        "name": "Anish Kumar",
+        "balances": {"Casual Leave": 10, "Sick Leave": 10, "Earned Leave": 15}
+    },
+    "E107": {
+        "name": "Avinash Gupta",
+        "balances": {"Casual Leave": 12, "Sick Leave": 10, "Earned Leave": 15}
+    }
+}
+
+SUPPORTED_LEAVE_TYPES = ["Casual Leave", "Sick Leave", "Earned Leave"]
+
+def validate_employee(emp_id):
+    """Confirm that the entered employee ID exists."""
+    return emp_id in employees
+
+def validate_leave_type(leave_type):
+    """Accept only supported leave types."""
+    return leave_type in SUPPORTED_LEAVE_TYPES
+
+def calculate_leave_days(from_date_str, to_date_str):
+    """Calculate requested duration including both dates."""
+    try:
+        from_date = datetime.strptime(from_date_str, "%Y-%m-%d")
+        to_date = datetime.strptime(to_date_str, "%Y-%m-%d")
+        
+        if to_date < from_date:
+            return None, "Error: To-Date cannot be earlier than From-Date."
+        
+        delta = to_date - from_date
+        return delta.days + 1, None
+    except ValueError:
+        return None, "Error: Invalid date format. Please use YYYY-MM-DD."
+
+def register_employee():
+    """Register a new employee into the system."""
+    print("\n--- Register New Employee ---")
+    emp_id = input("Enter Employee ID (e.g., E108): ").strip().upper()
+    if emp_id in employees:
+        print("Error: Employee ID already exists!")
+        return
+    
+    name = input("Enter Employee Name: ").strip().upper()
+    if not name:
+        print("Error: Name cannot be empty.")
+        return
+        
+    try:
+        cl = int(input("Enter Casual Leave balance: "))
+        sl = int(input("Enter Sick Leave balance: "))
+        el = int(input("Enter Earned Leave balance: "))
+    except ValueError:
+        print("Error: Please enter valid integer numbers for balances.")
+        return
+
+    employees[emp_id] = {
+        "name": name,
+        "balances": {"Casual Leave": cl, "Sick Leave": sl, "Earned Leave": el}
+    }
+    print(f"Success: Employee {name} ({emp_id}) registered successfully!")
+
+def delete_employee():
+    """Delete an employee record from the system."""
+    print("\n--- Delete Employee ---")
+    emp_id = input("Enter Employee ID to delete: ").strip().upper()
+    if not validate_employee(emp_id):
+        print("Error: Employee ID does not exist.")
+        return
+    
+    removed_name = employees[emp_id]["name"]
+    del employees[emp_id]
+    print(f"Success: Employee {removed_name} ({emp_id}) has been removed from the system.")
+
+def view_balance():
+    """Display current balance for an employee."""
+    print("\n--- View Leave Balance ---")
+    emp_id = input("Enter Employee ID: ").strip().upper()
+    if not validate_employee(emp_id):
+        print("Error: Employee ID does not exist.")
+        return
+    
+    emp = employees[emp_id]
+    print(f"\nEmployee ID: {emp_id}")
+    print(f"Employee Name: {emp['name']}")
+    print("Leave Balances:")
+    for leave_type, balance in emp["balances"].items():
+        print(f"  - {leave_type}: {balance} days")
+
+def apply_leave():
+    """Process a leave request."""
+    print("\n--- Apply for Leave ---")
+    emp_id = input("Enter Employee ID: ").strip().upper()
+    if not validate_employee(emp_id):
+        print("Error: Employee ID does not exist.")
+        return
+    
+    print("Supported Leave Types: 1. Casual Leave  2. Sick Leave  3. Earned Leave")
+    leave_type = input("Enter Leave Type exactly as listed: ").strip()
+    if not validate_leave_type(leave_type):
+        print("Error: Invalid leave type selected.")
+        return
+    
+    from_date_str = input("Enter From-Date (YYYY-MM-DD): ").strip()
+    to_date_str = input("Enter To-Date (YYYY-MM-DD): ").strip()
+    
+    days, error_msg = calculate_leave_days(from_date_str, to_date_str)
+    if error_msg:
+        print(error_msg)
+        return
+    
+    current_balance = employees[emp_id]["balances"][leave_type]
+    print(f"Requested Leave Days: {days}")
+    print(f"Available {leave_type} Balance: {current_balance}")
+    
+    if days <= current_balance:
+        employees[emp_id]["balances"][leave_type] -= days
+        print(f"Status: APPROVED! {days} day(s) deducted.")
+        print(f"Remaining {leave_type} Balance: {employees[emp_id]['balances'][leave_type]}")
+    else:
+        print("Status: REJECTED! Insufficient leave balance.")
+
+def list_all_employees():
+    """Display all employees in the system."""
+    print("\n--- All Employees List ---")
+    if not employees:
+        print("No employees found in the system.")
+        return
+    for emp_id, data in employees.items():
+        print(f"ID: {emp_id} | Name: {data['name']}")
+
+def main():
+    """Control the console application interface."""
+    while True:
+        print("\n========================================")
+        print("    EMPLOYEE LEAVE MANAGEMENT SYSTEM    ")
+        print("========================================")
+        print("1. View Employee Leave Balance")
+        print("2. Apply for Leave")
+        print("3. Register New Employee")
+        print("4. Delete Employee")
+        print("5. List All Employees")
+        print("6. Exit")
+        
+        choice = input("Enter your choice (1-6): ").strip()
+        
+        if choice == '1':
+            view_balance()
+        elif choice == '2':
+            apply_leave()
+        elif choice == '3':
+            register_employee()
+        elif choice == '4':
+            delete_employee()
+        elif choice == '5':
+            list_all_employees()
+        elif choice == '6':
+            print("Exiting application. Thank you!")
+            break
+        else:
+            print("Error: Invalid choice. Please select between 1 and 6.")
+
+if __name__ == "__main__":
+    main()
